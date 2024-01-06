@@ -1,3 +1,5 @@
+import Feed from "@components/Feed";
+
 const Home = () => {
 	return (
 		<section className="w-full flex-center flex-col">
@@ -10,6 +12,8 @@ const Home = () => {
             <p className="desc text-center">
                 Prompter is an open-source project that aims to provide a platform for users to discover and share AI-generated prompts.
             </p>
+
+            <Feed />
 		</section>
 	);
 };
