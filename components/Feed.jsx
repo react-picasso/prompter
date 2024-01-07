@@ -19,21 +19,52 @@ const PromptCardList = ({ data, handleTagClick }) => {
 };
 
 const Feed = () => {
-	const [searchText, setSearchText] = useState("");
-	const [posts, setPosts] = useState([]);
+	const [allPosts, setAllPosts] = useState([]);
 
-	const handleSearchChange = (e) => {};
+	const [searchText, setSearchText] = useState("");
+	const [searchTimeout, setSearchTimeout] = useState(null);
+	const [searchedResults, setSearchedResults] = useState([]);
+
+	const fetchPosts = async () => {
+		const response = await fetch("/api/prompt");
+		const data = await response.json();
+
+		setAllPosts(data);
+	};
 
 	useEffect(() => {
-		const fetchPosts = async () => {
-			const response = await fetch("/api/prompt");
-			const data = await response.json();
-
-			setPosts(data);
-		};
-
 		fetchPosts();
 	}, []);
+
+	const filterPrompts = (searchText) => {
+		const regex = new RegExp(searchText, "i");
+		return allPosts.filter(
+			(item) =>
+				regex.test(item.creator.username) ||
+				regex.test(item.creator.tag) ||
+				regex.test(item.creator.prompt)
+		);
+	};
+
+	const handleSearchChange = (e) => {
+		clearTimeout(searchTimeout);
+		setSearchText(e.target.value);
+
+		// debounce method
+		setSearchTimeout(
+			setTimeout(() => {
+				const searchedResults = filterPrompts(e.target.value);
+				setSearchedResults(searchedResults);
+			}, 500)
+		);
+	};
+
+	const handleTagClick = (tagName) => {
+		setSearchText(tagName);
+
+		const searchedResults = filterPrompts(tagName);
+		setSearchedResults(searchedResults);
+	};
 
 	return (
 		<section className="feed">
@@ -44,11 +75,21 @@ const Feed = () => {
 					value={searchText}
 					className="search_input peer"
 					onChange={handleSearchChange}
-                    required
+					required
 				/>
 			</form>
 
-			<PromptCardList data={posts} handleTagClick={() => {}} />
+			{searchText ? (
+				<PromptCardList
+					data={searchedResults}
+					handleTagClick={handleTagClick}
+				/>
+			) : (
+				<PromptCardList
+					data={allPosts}
+					handleTagClick={handleTagClick}
+				/>
+			)}
 		</section>
 	);
 };
